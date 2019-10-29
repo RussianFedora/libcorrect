@@ -15,6 +15,7 @@ Source0:        %{url}/tarball/%{gitcommit_full}
 
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
+BuildRequires:  ninja-build
 
 %description
 libcorrect is a library for Forward Error Correction. By using libcorrect,
@@ -37,22 +38,29 @@ applications that want to make use of libcorrect.
 
 %prep
 %autosetup -p1 -n quiet-%{name}-%{gitcommit}
+mkdir -p %{_target_platform}
 echo "set_property(TARGET correct PROPERTY SOVERSION 0.0.0)" >> CMakeLists.txt
-sed -i "s|DESTINATION lib|DESTINATION %{_lib}|" CMakeLists.txt
-sed -i '/CMAKE_C_FLAGS/d' CMakeLists.txt
-sed -i 's|}" HAVE_SSE)|}" HAVE_SSE_dd)|' CMakeLists.txt
+sed -e "s|DESTINATION lib|DESTINATION %{_lib}|" \
+    -e '/CMAKE_C_FLAGS/d' \
+    -e 's|}" HAVE_SSE)|}" HAVE_SSE_dd)|' \
+    -e "/(fec_shim_static/d" \
+    -e "s| fec_shim_static||" \
+    -e "/(correct_static/d" \
+    -e "s| correct_static||" -i CMakeLists.txt
 
 
 %build
-%cmake \
+pushd %{_target_platform}
+    %cmake -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_AR=/usr/bin/gcc-ar \
     -DCMAKE_RANLIB=/usr/bin/gcc-ranlib \
     -DCMAKE_NM=/usr/bin/gcc-nm \
-    .
-%make_build
+    ..
+popd
 
 %install
-%make_install
+%ninja_install -C %{_target_platform}
 
 %files
 %license LICENSE

@@ -58,6 +58,7 @@ pushd %{_target_platform}
     -DCMAKE_NM=/usr/bin/gcc-nm \
     ..
 popd
+%ninja_build -C %{_target_platform}
 
 %install
 %ninja_install -C %{_target_platform}
@@ -65,7 +66,7 @@ popd
 %files
 %license LICENSE
 %doc README.md
-%{_libdir}/libcorrect.so.*
+%{_libdir}/libcorrect.so.0.0.0
 
 %files devel
 %{_includedir}/correct*.h
